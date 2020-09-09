@@ -74,16 +74,17 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(res.Body)
 
 	fmt.Fprint(w, string(body))
-	fmt.Println("url", url)
+
+	log.Printf("%s %d %s\n", r.Method, res.StatusCode, url)
 }
 
 func main() {
 	envLoad()
 
-	fmt.Println("listening localhost:8080...")
+	fmt.Println("listening localhost:8081...")
 	http.HandleFunc("/show", showCookie)
 	http.HandleFunc("/", requestHandler)
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
