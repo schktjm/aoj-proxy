@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -24,13 +25,11 @@ func showCookie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func makeRequest(r *http.Request) (*http.Response, error) {
-	url := os.Getenv("URL")
-
+func makeRequest(r *http.Request, url string) (*http.Response, error) {
 	client := &http.Client{}
 
 	defer r.Body.Close()
-	req, err := http.NewRequest(r.Method, url+r.URL.Path, r.Body)
+	req, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,8 +51,15 @@ func makeRequest(r *http.Request) (*http.Response, error) {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
+	var url string
+	if path := strings.Split(r.URL.Path, "/"); path[1] == "dat" {
+		url = fmt.Sprintf("%s/%s", os.Getenv("DAT_BASE_URL"), strings.Join(path[2:], "/"))
+	} else {
+		url = fmt.Sprintf("%s/%s", os.Getenv("AOJ_BASE_URL"), strings.Join(path[2:], "/"))
+	}
+
 	defer r.Body.Close()
-	res, err := makeRequest(r)
+	res, err := makeRequest(r, url)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,7 +74,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(res.Body)
 
 	fmt.Fprint(w, string(body))
-	log.Printf("path: %v", r.URL.Path)
+	fmt.Println("url", url)
 }
 
 func main() {
