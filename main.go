@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -25,11 +26,11 @@ func showCookie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func makeRequest(r *http.Request, url string) (*http.Response, error) {
+func makeRequest(r *http.Request, urlPath string) (*http.Response, error) {
 	client := &http.Client{}
 
 	defer r.Body.Close()
-	req, err := http.NewRequest(r.Method, url, r.Body)
+	req, err := http.NewRequest(r.Method, urlPath, r.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,6 +40,12 @@ func makeRequest(r *http.Request, url string) (*http.Response, error) {
 			req.Header.Set(k, v)
 		}
 	}
+
+	values := url.Values{}
+	for k, v := range r.URL.Query() {
+		values.Add(k, v[0])
+	}
+	req.URL.RawQuery = values.Encode()
 
 	cookies := r.Cookies()
 	if len(cookies) > 0 {
